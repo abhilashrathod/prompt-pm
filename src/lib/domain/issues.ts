@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, like } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, like, ne } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   issueEvents,
@@ -25,6 +25,8 @@ export type IssueFilters = {
   backlogOnly?: boolean;
   assigneeId?: number;
   status?: IssueStatus;
+  /** Everything except done. Ignored when `status` is set. */
+  openOnly?: boolean;
   type?: IssueType;
   priority?: Priority;
   text?: string;
@@ -59,7 +61,7 @@ export function listIssues(f: IssueFilters): IssueListItem[] {
         f.sprintIds ? inArray(issues.sprintId, f.sprintIds) : undefined,
         f.backlogOnly ? isNull(issues.sprintId) : undefined,
         f.assigneeId ? eq(issues.assigneeId, f.assigneeId) : undefined,
-        f.status ? eq(issues.status, f.status) : undefined,
+        f.status ? eq(issues.status, f.status) : f.openOnly ? ne(issues.status, "done") : undefined,
         f.type ? eq(issues.type, f.type) : undefined,
         f.priority ? eq(issues.priority, f.priority) : undefined,
         f.text ? like(issues.title, `%${f.text}%`) : undefined,

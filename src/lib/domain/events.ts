@@ -1,11 +1,23 @@
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import type { Conn } from "@/db/client";
-import { issueEvents, issues, type Issue, type User } from "@/db/schema";
+import { ISSUE_STATUSES, PRIORITIES, issueEvents, issues, type Issue, type User } from "@/db/schema";
 
 export const PATCH_FIELDS = ["status", "assigneeId", "priority", "points", "sprintId", "title"] as const;
 export type PatchField = (typeof PATCH_FIELDS)[number];
 export type IssuePatch = Partial<Pick<Issue, PatchField>>;
 export type FieldChange = { field: PatchField; from: string | null; to: string | null };
+
+export const issuePatchSchema = z
+  .object({
+    status: z.enum(ISSUE_STATUSES).optional(),
+    assigneeId: z.number().int().positive().nullable().optional(),
+    priority: z.enum(PRIORITIES).optional(),
+    points: z.number().int().min(0).max(100).optional(),
+    sprintId: z.number().int().positive().nullable().optional(),
+    title: z.string().trim().min(1).max(200).optional(),
+  })
+  .strict();
 
 const NUMERIC_FIELDS = new Set<string>(["assigneeId", "points", "sprintId"]);
 

@@ -20,3 +20,7 @@ export type DB = BetterSQLite3Database<typeof schema>;
 const g = globalThis as unknown as { __db?: DB };
 export const db: DB = g.__db ?? open();
 if (process.env.NODE_ENV !== "production") g.__db = db;
+
+/** A db handle or a transaction; domain writes accept either. */
+export type Tx = Parameters<Parameters<DB["transaction"]>[0]>[0];
+export type Conn = DB | Tx;
